@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Widget Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      margin: 0;
+    }
+    .controls {
+      width: 40%;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+    .preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #f9f9f9;
+    }
+    .widget {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: absolute;
+      overflow: hidden;
+    }
+    .widget img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .more-info {
+      display: none;
+      position: absolute;
+      top: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h2>Widget Customizer</h2>
+
+    <label>Text: <input type="text" id="widgetText" value="Click Me"></label><br><br>
+
+    <label>Text Size: <input type="number" id="textSize" value="16"> px</label><br><br>
+
+    <label>Color: <input type="color" id="widgetColor" value="#007bff"></label><br><br>
+
+    <label>Shape:
+      <select id="widgetShape">
+        <option value="circle">Circle</option>
+        <option value="square">Square</option>
+        <option value="rounded">Rounded</option>
+        <option value="pill">Pill (horizontal)</option>
+      </select>
+    </label><br><br>
+
+    <label>Size: <input type="number" id="widgetSize" value="80"></label><br><br>
+
+    <label>Click URL: <input type="url" id="widgetURL" placeholder="https://example.com"></label><br><br>
+
+    <label>Upload Image: <input type="file" id="widgetImage" accept=".png,.jpg,.jpeg,.webp,.svg"></label><br><br>
+
+    <label>Position:
+      <select id="widgetPosition">
+        <option value="top-left">Top Left</option>
+        <option value="top-right">Top Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-right">Bottom Right</option>
+      </select>
+    </label><br><br>
+
+    <button id="generateCode">Generate Embed Code</button>
+    <textarea id="embedCode" rows="6" style="width:100%;margin-top:10px;"></textarea>
+  </div>
+
+  <div class="preview">
+    <div id="widgetPreview" class="widget" style="width:80px;height:80px;background:#007bff;border-radius:50%">
+      <span id="widgetLabel" style="color:#fff;font-size:16px;">Click Me</span>
+      <img id="widgetImg" style="display:none;" />
+      <div class="more-info">More info here...</div>
+    </div>
+  </div>
+
+  <script>
+    const widget = document.getElementById('widgetPreview');
+    const label = document.getElementById('widgetLabel');
+    const img = document.getElementById('widgetImg');
+    const moreInfo = widget.querySelector('.more-info');
+
+    function updateWidget() {
+      const text = document.getElementById('widgetText').value;
+      const textSize = document.getElementById('textSize').value;
+      const color = document.getElementById('widgetColor').value;
+      const shape = document.getElementById('widgetShape').value;
+      const size = document.getElementById('widgetSize').value;
+      const position = document.getElementById('widgetPosition').value;
+
+      widget.style.background = color;
+      widget.style.width = size + 'px';
+      widget.style.height = size + 'px';
+
+      if (shape === 'circle') {
+        widget.style.borderRadius = '50%';
+      } else if (shape === 'square') {
+        widget.style.borderRadius = '0';
+      } else if (shape === 'rounded') {
+        widget.style.borderRadius = '12px';
+      } else if (shape === 'pill') {
+        widget.style.borderRadius = size/2 + 'px';
+        widget.style.width = (size * 1.9) + 'px';
+      }
+
+      label.textContent = text;
+      label.style.fontSize = textSize + 'px';
+
+      // Positioning
+      widget.style.top = widget.style.right = widget.style.bottom = widget.style.left = 'auto';
+      if (position === 'top-left') {
+        widget.style.top = '20px';
+        widget.style.left = '20px';
+      } else if (position === 'top-right') {
+        widget.style.top = '20px';
+        widget.style.right = '20px';
+      } else if (position === 'bottom-left') {
+        widget.style.bottom = '20px';
+        widget.style.left = '20px';
+      } else if (position === 'bottom-right') {
+        widget.style.bottom = '20px';
+        widget.style.right = '20px';
+      }
+    }
+
+    document.querySelectorAll('#widgetText, #textSize, #widgetColor, #widgetShape, #widgetSize, #widgetPosition')
+      .forEach(el => el.addEventListener('input', updateWidget));
+
+    document.getElementById('widgetImage').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          img.src = event.target.result;
+          img.style.display = 'block';
+          label.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        img.style.display = 'none';
+        label.style.display = 'block';
+      }
+    });
+
+    widget.addEventListener('click', () => {
+      const url = document.getElementById('widgetURL').value;
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        moreInfo.style.display = moreInfo.style.display === 'block' ? 'none' : 'block';
+      }
+    });
+
+    document.getElementById('generateCode').addEventListener('click', () => {
+      const embed = widget.outerHTML;
+      document.getElementById('embedCode').value = embed;
+    });
+
+    updateWidget();
+  </script>
+</body>
+</html>
